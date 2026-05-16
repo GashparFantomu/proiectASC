@@ -1,15 +1,17 @@
-import customtkinter
+from models.asm_parser import ASMParser
+from models.instruction_loader import InstructionLoader
 
-class App(customtkinter.CTk):
-    def __init__(self):
-        super().__init__()
-        self.geometry("1280x720")
 
-        self.button = customtkinter.CTkButton(self, text="ze button", command=self.button_callbck)
-        self.button.pack(padx=20, pady=20)
+print("--- Testare ASM Parser ---")
+parsed_asm = ASMParser.parse("test.asm")
+for line in parsed_asm:
+    print(line)
 
-    def button_callbck(self):
-        print("it clicked")
+print("\n--- Testare Instruction Loader ---")
+loader = InstructionLoader()
+opcodes = loader.load("InstructiuniProcesor.xlsx")
 
-app = App()
-app.mainloop()
+for mnemonic, opcode_int in opcodes.items():
+    binary_str = format(opcode_int, '04b')
+    print(f"Instructiune: {mnemonic:<5} | Opcode (int): {opcode_int:<2} | Binar: {binary_str}")
+
