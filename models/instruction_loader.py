@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-
+print("--instruction loader--")
 class InstructionLoader:
     def __init__(self):
         self.opcodes_map = {}
