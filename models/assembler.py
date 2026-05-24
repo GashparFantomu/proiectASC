@@ -60,6 +60,6 @@ class Assembler:
                 offset = self.parse_operand(tokens[1])
                 code |= offset
 
-            machine_code.append(f"{code:04X}")
+            machine_code.append(code)
 
         return machine_code

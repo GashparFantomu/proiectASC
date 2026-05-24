@@ -34,13 +34,13 @@ class CPU:
         self.micro_memory = {}  # Va fi încărcată din Microprogram.xlsx
         self.MAR = 0  # Micro Address Register (arată linia curentă din microprogram)
 
-    def load_program(self, hex_codes: list, start_address: int = 0):
+    def load_program(self, machine_codes: list, start_address: int = 0):
         """Încarcă codul mașină (Hex) generat de Asamblor în memoria RAM."""
         self.PC = start_address
-        for i, hex_str in enumerate(hex_codes):
+        for i, code_val in enumerate(machine_codes):
             # Convertim din Hex (text) în întreg pe 16 biți
-            self.memory[start_address + i] = int(hex_str, 16)
-        print(f"[CPU] Program incarcat in RAM la adresa {start_address}. Dimensiune: {len(hex_codes)} cuvinte.")
+            self.memory[start_address + i] = code_val
+        print(f"[CPU] Program incarcat in RAM la adresa {start_address}. Dimensiune: {len(code_val)} cuvinte.")
 
     def print_status(self):
         """Afișează starea curentă a celor mai importanți regiștri (util pentru debug)."""
