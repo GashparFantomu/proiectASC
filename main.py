@@ -1,16 +1,29 @@
 from models.asm_parser import ASMParser
 from models.instruction_loader import InstructionLoader
+from models.assembler import Assembler
+from models.cpu import CPU
 
-#interfata temporara
-print("--- Testare ASM Parser ---")
-parsed_asm = ASMParser.parse("test.asm")
-for line in parsed_asm:
-    print(line)
+def main():
+    print("\n1. Se încarcă instrucțiunile din Excel...")
+    loader = InstructionLoader()
+    # Încarcă primul sheet
+    loader.load("Template_tema1.xlsx", sheet_name=0)
 
-print("\n--- Testare Instruction Loader ---")
-loader = InstructionLoader()
-opcodes = loader.load("Template_tema1.xlsx")
+    print("2. Se parsează fișierul test.asm...")
+    parsed_asm = ASMParser.parse("test.asm")
 
-for mnemonic, opcode_int in opcodes.items():
-    binary_str = format(opcode_int, '04b')
-    print(f"Instructiune: {mnemonic:<5} | Opcode (int): {opcode_int:<2} | Binar: {binary_str}")
+    print("\n3. === ASAMBLARE (Generare Cod Mașină) ===")
+    assembler = Assembler(loader)
+    hex_output = assembler.assemble(parsed_asm)
+
+    for original_tokens, hex_code in zip(parsed_asm, hex_output):
+        original_line = " ".join(original_tokens)
+        print(f"{original_line:<15} -> {hex_code}")
+
+    print("\n4. Încărcare în Procesor (RAM)...")
+    cpu = CPU()
+    cpu.load_program(hex_output)
+    cpu.print_status()
+
+if __name__ == "__main__":
+    main()

@@ -7,17 +7,16 @@ class ASMParser:
     @staticmethod
     def parse(filepath: str) -> list:
         if not os.path.exists(filepath):
-            print("eroare fisier!")
+            print(f"[Eroare] Nu am găsit fișierul ASM: {filepath}")
             return []
 
         with open(filepath, 'r') as file:
             content = file.read()
 
-        raw_lines = content.splitlines()
         parsed_lines = []
-
-        for line in raw_lines:
-            line = line.strip()
+        for line in content.splitlines():
+            # Eliminăm comentariile inline și spațiile inutile
+            line = line.split(';')[0].strip()
             if not line:
                 continue
 
