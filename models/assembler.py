@@ -14,6 +14,7 @@ class Assembler:
                 offset = (1 << 8) + offset  # Complement față de 2
             return offset & 0xFF
 
+
         # 2. Tratare Registre. Curățăm simbolurile speciale pt flexibilitate
         clean_op = op_str.replace('(', '').replace(')+', '').replace('@', '')
 
