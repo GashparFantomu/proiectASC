@@ -9,6 +9,7 @@ def main():
     # Încarcă primul sheet
     loader.load("Template_tema1.xlsx", sheet_name=0)
 
+
     print("2. Se parsează fișierul test.asm...")
     parsed_asm = ASMParser.parse("test.asm")
 
