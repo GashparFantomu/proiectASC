@@ -7,7 +7,7 @@ class ASMParser:
     @staticmethod
     def parse(filepath: str) -> list:
         if not os.path.exists(filepath):
-            print(f"[Eroare] Nu am găsit fișierul ASM: {filepath}")
+            print(f"[Eroare] Nu am gasit fisierul ASM: {filepath}")
             return []
 
         with open(filepath, 'r') as file:
@@ -15,12 +15,11 @@ class ASMParser:
 
         parsed_lines = []
         for line in content.splitlines():
-            # Eliminăm comentariile inline și spațiile inutile
-            line = line.split(';')[0].strip()
-            if not line:
+            clean_line = line.split(';')[0].strip()
+            if not clean_line:
                 continue
 
-            tokens = [t for t in re.split(ASMParser.DELIMITERS, line) if t]
+            tokens = [token for token in re.split(ASMParser.DELIMITERS, clean_line) if token]
             parsed_lines.append(tokens)
 
         return parsed_lines
