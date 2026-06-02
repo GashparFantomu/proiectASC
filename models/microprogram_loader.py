@@ -43,7 +43,8 @@ class MicroprogramLoader:
             dbus = str(current_row.iloc[coloana_DBUS]).strip() if not pd.isna(current_row.iloc[coloana_DBUS]) else "NONE"
             alu = str(current_row.iloc[coloana_ALU]).strip() if not pd.isna(current_row.iloc[coloana_ALU]) else "NONE"
             rbus = str(current_row.iloc[coloana_RBUS]).strip() if not pd.isna(current_row.iloc[coloana_RBUS]) else "NONE"
-            memory_op = str(current_row.iloc[coloana_memorie]).strip() if not pd.isna(current_row.iloc(coloana_memorie)) else "NONE"
+            memory_op = str(current_row.iloc[coloana_memorie]).strip() if not pd.isna(
+                current_row.iloc[coloana_memorie]) else "NONE"
             other_ops = str(current_row.iloc[coloana_alte_operatii]).strip() if not pd.isna(current_row.iloc[coloana_alte_operatii]) else "NONE"
             successor = str(current_row.iloc[coloana_succesor]).strip() if not pd.isna(current_row.iloc[coloana_succesor]) else "STEP"
             jump_address = str(current_row.iloc[coloana_adresa_salt]).strip() if not pd.isna(current_row.iloc[coloana_adresa_salt]) else "0"

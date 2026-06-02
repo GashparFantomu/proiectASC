@@ -117,27 +117,80 @@ class CPUViewerApp(ctk.CTk):
                 self.asm_textbox.insert("end", f.read())
 
     def assemble_code(self):
-        messagebox.showinfo("Asamblare Reușită", "Codul ASM a fost parsat și convertit în cod mașină cu succes!")
-        # Aici folosești self.assembler.assemble(parsed_lines)
-        # self.cpu.load_program(machine_codes)
+        # 1. Preluăm textul complet din caseta ASM din interfață
+        cod_asm_text = self.asm_textbox.get("0.0", "end")
+
+        # 2. Îl salvăm temporar într-un fișier sau îl parsam direct.
+        # Deocamdată, ca să folosești parserul tău existent, îl scriem în test.asm:
+        with open("test.asm", "w") as f:
+            f.write(cod_asm_text)
+
+        # 3. Apelăm parserul și asamblorul tău
+        from models.asm_parser import ASMParser
+        parsed_lines = ASMParser.parse("test.asm")
+
+        if not parsed_lines:
+            messagebox.showerror("Eroare", "Fișierul ASM este gol sau are erori de sintaxă!")
+            return
+
+        machine_codes = self.assembler.assemble(parsed_lines)
+
+        # 4. Încărcăm codul mașină în CPU
+        self.cpu.load_program(machine_codes, start_address=0)
+
+        # 5. Resetăm MAR și PC pentru un nou rulaj
+        self.cpu.PC = 0
+        self.cpu.MAR = 0
+
+        # 6. Actualizăm interfața grafică cu noile valori (0000 peste tot la început)
+        self.update_ui()
+
+        messagebox.showinfo("Asamblare Reușită",
+                            f"Codul a fost compilat și încărcat în RAM!\nDimensiune: {len(machine_codes)} cuvinte.")
 
     def step_execution(self):
-        # Aici vei apela logica: self.cpu.execute_clock_cycle() sau echivalentul
-        # Apoi actualizezi UI-ul folosind update_ui()
-        self.update_ui()
-        pass
-
+        # Verificăm dacă obiectul CPU are opcodes_map salvat
+        if self.cpu and hasattr(self.cpu, 'opcodes_map'):
+            # Rulăm un singur ciclu de ceas MPM
+            self.cpu.execute_clock_cycle(self.cpu.opcodes_map)
+            # Actualizăm interfața grafică cu noile valori ale regiștrilor/magistralelor
+            self.update_ui()
+        else:
+            messagebox.showerror("Eroare", "CPU-ul sau configurația de opcoduri nu a fost inițializată corect.")
     def update_ui(self):
-        # Model pentru a face update valorilor dintr-un Entry blocat (readonly)
-        def set_val(key, value):
-            self.ui_fields[key].configure(state="normal")
-            self.ui_fields[key].delete(0, "end")
-            self.ui_fields[key].insert(0, value)
-            self.ui_fields[key].configure(state="readonly")
+        # Funcție ajutătoare pentru a scrie într-un Entry setat pe 'readonly'
+        def set_val(key, value_str):
+            if key in self.ui_fields:
+                self.ui_fields[key].configure(state="normal")
+                self.ui_fields[key].delete(0, "end")
+                self.ui_fields[key].insert(0, value_str)
+                self.ui_fields[key].configure(state="readonly")
 
-        # Aici iei valorile din self.cpu și le pui pe ecran. Exemplu:
-        # set_val("PC", f"0x{self.cpu.PC:04X}")
-        # set_val("R0", f"0x{self.cpu.registers['R0']:04X}")
+        # 1. Actualizăm regiștrii speciali în format Hexazecimal (04X -> ex: 00AF)
+        set_val("PC", f"{self.cpu.PC:04X}")
+        set_val("IR", f"{self.cpu.IR:04X}")
+        set_val("SP", f"{self.cpu.SP:04X}")
+        set_val("T", f"{self.cpu.T:04X}")
+        set_val("ADR", f"{self.cpu.ADR:04X}")
+        set_val("MDR", f"{self.cpu.MDR:04X}")
+        set_val("MAR", str(self.cpu.MAR))  # MAR e index de linie, îl lăsăm decimal
+
+        # 2. Actualizăm magistralele
+        set_val("SBUS", f"{self.cpu.SBUS:04X}")
+        set_val("DBUS", f"{self.cpu.DBUS:04X}")
+        set_val("RBUS", f"{self.cpu.RBUS:04X}")
+
+        # 3. Actualizăm flag-urile (0 sau 1)
+        set_val("N", str(self.cpu.flags['N']))
+        set_val("Z", str(self.cpu.flags['Z']))
+        set_val("V", str(self.cpu.flags['V']))
+        set_val("C", str(self.cpu.flags['C']))
+
+        # 4. Actualizăm regiștrii generali (R0 - R15)
+        for i in range(16):
+            reg_name = f"R{i}"
+            reg_val = self.cpu.registers[reg_name]
+            set_val(reg_name, f"{reg_val:04X}")
 
 
 if __name__ == "__main__":
