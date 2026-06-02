@@ -13,28 +13,28 @@ class InstructionLoader:
             print(f"[Eroare] Fisierul nu exista: {filepath}")
             return self.opcodes_map
 
-        df = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
+        excel_table = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
+        coloana_mnemonic = 1
 
-        for index, row in df.iterrows():
-            mnemonic = str(row.iloc[1]).strip()
+        for index, current_row in excel_table.iterrows():
+            mnemonic = str(current_row.iloc[coloana_mnemonic]).strip()
             if pd.isna(mnemonic) or mnemonic == 'nan' or not mnemonic:
                 continue
 
             base_opcode = 0
             empty_bits = 0
 
-            # Iterăm prin cele 16 coloane de biți (index 2 la 17 în Excel)
-            for col_idx in range(2, 18):
-                base_opcode <<= 1  # Shiftăm la stânga la fiecare pas
+            for index_coloana_bit in range(2, 18): #16 coloane excel
+                base_opcode <<= 1
 
-                if col_idx < len(row):
-                    val = str(row.iloc[col_idx]).strip()
-                    if val.endswith('.0'): val = val[:-2]
+                if index_coloana_bit < len(current_row):
+                    valoare_celula_bit = str(current_row.iloc[index_coloana_bit]).strip()
+                    if valoare_celula_bit.endswith('.0'): valoare_celula_bit = valoare_celula_bit[:-2]
 
-                    if val in ['0', '1']:
-                        base_opcode |= int(val)
+                    if valoare_celula_bit in ['0', '1']:
+                        base_opcode |= int(valoare_celula_bit)
                     else:
-                        empty_bits += 1  # Am dat de o "gaură" (ex: operand)
+                        empty_bits += 1
                 else:
                     empty_bits += 1
 

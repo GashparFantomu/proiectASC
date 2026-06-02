@@ -9,39 +9,48 @@ class MicroprogramLoader:
 
     def load(self, filepath: str, sheet_name: str = "Microprogram") -> list:
         if not os.path.exists(filepath):
-            print(f"[Eroare] Nu am găsit fișierul de microprogram: {filepath}")
+            print(f"[Eroare] Nu am gasit fisierul de microprogram: {filepath}")
             return []
 
-        # Citim Excel-ul
-        df = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
+        excel_table = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
         self.microinstructions = []
 
-        for index, row in df.iterrows():
-            # Eticheta (ex: IFCH:)
-            label = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ""
 
-            # Adresa de microprogram (ignorăm rândurile fără adresă validă)
+        coloana_eticheta = 0  # Coloana A din Excel
+        coloana_microadresa = 1  # Coloana B din Excel
+        coloana_SBUS = 4  # Coloana E din Excel
+        coloana_DBUS = 5  # Coloana F din Excel
+        coloana_ALU = 6  # Coloana G din Excel
+        coloana_RBUS = 7  # Coloana H din Excel
+        coloana_memorie = 8  # Coloana I din Excel
+        coloana_alte_operatii = 9  # Coloana J din Excel
+        coloana_succesor = 10  # Coloana K din Excel
+        coloana_adresa_salt = 13  # Coloana N din Excel
+
+
+        for index_linie, current_row in excel_table.iterrows():
+            label = str(current_row.iloc[coloana_eticheta]).strip() if not pd.isna(current_row.iloc[coloana_eticheta]) else ""
+
             try:
-                addr_val = row.iloc[1]
-                if pd.isna(addr_val) or "Microadresa" in str(addr_val):
+                address_value = current_row.iloc[coloana_microadresa]
+                if pd.isna(address_value) or "Microadresa" in str(address_value):
                     continue
-                micro_address = int(float(addr_val))
+                micro_address_numeric = int(float(address_value))
             except (ValueError, TypeError):
                 continue
 
-            # Extragem textul semnalelor (din coloanele aferente din Excelul tau)
-            sbus = str(row.iloc[4]).strip() if not pd.isna(row.iloc[4]) else "NONE"
-            dbus = str(row.iloc[5]).strip() if not pd.isna(row.iloc[5]) else "NONE"
-            alu = str(row.iloc[6]).strip() if not pd.isna(row.iloc[6]) else "NONE"
-            rbus = str(row.iloc[7]).strip() if not pd.isna(row.iloc[7]) else "NONE"
-            memory_op = str(row.iloc[8]).strip() if not pd.isna(row.iloc[8]) else "NONE"
-            other_ops = str(row.iloc[9]).strip() if not pd.isna(row.iloc[9]) else "NONE"
-            successor = str(row.iloc[10]).strip() if not pd.isna(row.iloc[10]) else "STEP"
-            jump_address = str(row.iloc[13]).strip() if not pd.isna(row.iloc[13]) else "0"
+            sbus = str(current_row.iloc[coloana_SBUS]).strip() if not pd.isna(current_row.iloc[coloana_SBUS]) else "NONE"
+            dbus = str(current_row.iloc[coloana_DBUS]).strip() if not pd.isna(current_row.iloc[coloana_DBUS]) else "NONE"
+            alu = str(current_row.iloc[coloana_ALU]).strip() if not pd.isna(current_row.iloc[coloana_ALU]) else "NONE"
+            rbus = str(current_row.iloc[coloana_RBUS]).strip() if not pd.isna(current_row.iloc[coloana_RBUS]) else "NONE"
+            memory_op = str(current_row.iloc[coloana_memorie]).strip() if not pd.isna(current_row.iloc(coloana_memorie)) else "NONE"
+            other_ops = str(current_row.iloc[coloana_alte_operatii]).strip() if not pd.isna(current_row.iloc[coloana_alte_operatii]) else "NONE"
+            successor = str(current_row.iloc[coloana_succesor]).strip() if not pd.isna(current_row.iloc[coloana_succesor]) else "STEP"
+            jump_address = str(current_row.iloc[coloana_adresa_salt]).strip() if not pd.isna(current_row.iloc[coloana_adresa_salt]) else "0"
 
             micro_inst = MicroInstruction(
                 label=label,
-                micro_address=micro_address,
+                micro_address=micro_address_numeric,
                 sbus=sbus,
                 dbus=dbus,
                 alu=alu,
