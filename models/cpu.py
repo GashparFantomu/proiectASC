@@ -88,7 +88,7 @@ class CPU:
 
         return True
 
-    # ==================== METODE PRIVATE DE RUTARE ====================
+    # ==================== METODE PRIVATE DE RUTARE =====
 
     def _curata_semnal(self, semnal: str) -> str:
         """Extrage doar comanda din textul Excel, ignorand bitii (ex: 'PdPCs: 0110' -> 'PDPCS')."""
