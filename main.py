@@ -1,3 +1,4 @@
+from gui import CPUViewerApp
 from models.asm_parser import ASMParser
 from models.instruction_loader import InstructionLoader
 from models.assembler import Assembler
@@ -29,10 +30,13 @@ def main():
         print(f"   [Eroare] Nu s-a putut salva fișierul binar: {e}")
 
 
-    print("Incărcare in Procesor (RAM)...")
+    print("Incarcare in Procesor (RAM)...")
     cpu = CPU()
     cpu.load_program(machine_codes)
     cpu.print_registers()
+
+    app = CPUViewerApp(cpu_instance=cpu, assembler_instance=assembler)
+    app.mainloop()
 
 if __name__ == "__main__":
     main()
