@@ -22,10 +22,6 @@ class CPU:
         self.labels_map = {}     # label_upper -> micro_address
         self.opcodes_map = {}
 
-    # ================================================================
-    # Load / Init
-    # ================================================================
-
     def load_program(self, machine_codes: list, start_address: int = 0):
         self.PC = start_address
         for offset, code_val in enumerate(machine_codes):
@@ -49,6 +45,10 @@ class CPU:
     # ================================================================
 
     def execute_clock_cycle(self, opcodes_map):
+        if self.MAR == 0 and self.memory[self.PC] == 0:
+            print("[CPU] Program terminat.")
+            return False
+
         micro_inst = self.micro_memory.get(self.MAR)
         if not micro_inst:
             print(f"[CPU] Adresa MPM invalida: {self.MAR}. Oprit.")
