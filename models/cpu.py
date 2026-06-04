@@ -219,7 +219,7 @@ class CPU:
     def step(self):
         micro_inst = self.micro_memory.get(self.MAR)
         if not micro_inst:
-            print(f"[Eroare] Microinstrucțiune invalidă la MAR={self.MAR}")
+            print(f"[Eroare] Microinstrucțiune invalida la MAR={self.MAR}")
             return
 
         if micro_inst.label == "HALT":
