@@ -25,16 +25,9 @@ def main():
     print("Incarcare in Procesor (RAM)...")
     cpu = CPU()
     cpu.load_program(machine_codes)
-
-    # ATENȚIE: Trebuie să apelezi încărcarea microprogramului în CPU
     cpu.load_microprogram(micro_lista)
-
-    # Salvăm opcodes_map în CPU pentru a putea decodifica IR în faza de MAP
     cpu.opcodes_map = loader.opcodes_map
-
     cpu.print_registers()
-
-    # Pornirea interfeței grafice
     app = CPUViewerApp(cpu_instance=cpu, assembler_instance=assembler)
     app.mainloop()
 

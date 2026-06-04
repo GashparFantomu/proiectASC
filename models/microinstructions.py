@@ -19,6 +19,5 @@ class MicroInstruction:
     other_ops: str
     successor: str
     jump_address: str
-    # New fields required for correct JUMPI / conditional branching
-    index_sel: str = "INDEX0: 000"   # e.g. "INDEX0: 000", "INDEX3: 011"
-    inversion: str = "T: 0"          # "T: 0" = normal, "F: 1" = inverted condition
+    index_sel: str = "INDEX0: 000"
+    inversion: str = "T: 0"

@@ -15,26 +15,23 @@ class MicroprogramLoader:
         excel_table = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
         self.microinstructions = []
 
-        # Column indices (0-based)
-        COL_LABEL      = 0   # A: Eticheta
-        COL_ADDR       = 1   # B: Microadresa MPM (decimal)
-        COL_SBUS       = 4   # E: Sursa SBUS
-        COL_DBUS       = 5   # F: Sursa DBUS
-        COL_ALU        = 6   # G: Operatie ALU
-        COL_RBUS       = 7   # H: Destinatie RBUS
-        COL_MEM        = 8   # I: Operatii cu Memoria
-        COL_OTHER      = 9   # J: Alte Operatii
-        COL_SUCCESSOR  = 10  # K: Succesor
-        COL_INDEX_SEL  = 11  # L: Selectie INDEX
-        COL_INVERSION  = 12  # M: True negat/False
-        COL_JUMP_ADDR  = 13  # N: Microadresa de salt
+        COL_LABEL      = 0
+        COL_ADDR       = 1
+        COL_SBUS       = 4
+        COL_DBUS       = 5
+        COL_ALU        = 6
+        COL_RBUS       = 7
+        COL_MEM        = 8
+        COL_OTHER      = 9
+        COL_SUCCESSOR  = 10
+        COL_INDEX_SEL  = 11
+        COL_INVERSION  = 12
+        COL_JUMP_ADDR  = 13
 
         for index_linie, current_row in excel_table.iterrows():
-            # --- Label ---
             label_raw = current_row.iloc[COL_LABEL]
             label = str(label_raw).strip() if not pd.isna(label_raw) else ""
 
-            # --- Micro address (skip header / non-numeric rows) ---
             try:
                 address_value = current_row.iloc[COL_ADDR]
                 if pd.isna(address_value) or "Microadresa" in str(address_value):
@@ -58,7 +55,6 @@ class MicroprogramLoader:
             inversion = cell(COL_INVERSION)   # "T: 0" or "F: 1"
             jump_addr = cell(COL_JUMP_ADDR)   # e.g. "PWFAIL: 0000011" or "B1: 0001010"
 
-            # Strip empty / nan strings back to NONE
             for field in [sbus, dbus, alu, rbus, memory_op, other_ops]:
                 if field in ("nan", "", "NaN"):
                     field = "NONE"

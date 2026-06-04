@@ -17,7 +17,6 @@ class CPUViewerApp(ctk.CTk):
         self.title("CPU Emulator")
         self.geometry("1100x720")
 
-        # ==================== TOP BAR ====================
         self.top_frame = ctk.CTkFrame(self, height=40, corner_radius=0)
         self.top_frame.pack(side="top", fill="x")
 
@@ -30,7 +29,6 @@ class CPUViewerApp(ctk.CTk):
         self.btn_step = ctk.CTkButton(self.top_frame, text="Step (Clock Cycle)", width=130, command=self.step_execution)
         self.btn_step.pack(side="left", padx=10, pady=5)
 
-        # ==================== MAIN BODY ====================
         self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.main_frame.pack(side="top", fill="both", expand=True, padx=10, pady=10)
 
@@ -38,40 +36,32 @@ class CPUViewerApp(ctk.CTk):
         self.main_frame.grid_columnconfigure(1, weight=1)
         self.main_frame.grid_columnconfigure(2, weight=1)
 
-        # --- LEFT: ASM code ---
         self.left_panel = ctk.CTkFrame(self.main_frame)
         self.left_panel.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
-        ctk.CTkLabel(self.left_panel, text="Cod ASM Parsat", font=("Arial", 14, "bold")).pack(pady=10)
+        ctk.CTkLabel(self.left_panel, text="Cod ASM", font=("Arial", 14, "bold")).pack(pady=10)
         self.asm_textbox = ctk.CTkTextbox(self.left_panel, width=300, height=500)
         self.asm_textbox.pack(padx=10, pady=5, fill="both", expand=True)
 
-        ctk.CTkLabel(self.left_panel, text="Instructiunea Curenta", font=("Arial", 14, "bold")).pack(pady=(10, 0))
-        self.current_inst_entry = ctk.CTkEntry(self.left_panel, width=250, justify="center")
-        self.current_inst_entry.pack(padx=10, pady=10)
+        #ctk.CTkLabel(self.left_panel, text="Instructiunea Curenta", font=("Arial", 14, "bold")).pack(pady=(10, 0))
+        #self.current_inst_entry = ctk.CTkEntry(self.left_panel, width=250, justify="center")
+        #self.current_inst_entry.pack(padx=10, pady=10)
 
-        # --- CENTER: Buses, Special Regs, ALU ---
         self.center_panel = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.center_panel.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        # Special registers
-        # UI field key names must match what update_ui() uses below
         self.create_group(self.center_panel, "Registre Speciale",
                           ["PC", "IR", "SP", "MAR", "ADR", "MDR", "T", "IVR"])
 
-        # Flags
         self.create_group(self.center_panel, "Flags (N Z V C)",
                           ["FLAG", "N", "Z", "V", "C"])
 
-        # Buses
         self.create_group(self.center_panel, "Magistrale (Buses)",
                           ["SBUS", "DBUS", "RBUS"])
 
-        # ALU
         self.create_group(self.center_panel, "Unitatea Aritmetico-Logica",
                           ["Input S", "Input D", "Operatie", "Output R"])
 
-        # --- RIGHT: General registers R0-R15 ---
         self.right_panel = ctk.CTkFrame(self.main_frame)
         self.right_panel.grid(row=0, column=2, sticky="nsew", padx=5, pady=5)
 
@@ -103,8 +93,6 @@ class CPUViewerApp(ctk.CTk):
             entry.insert(0, default)
             entry.configure(state="readonly")
             self.ui_fields[label] = entry
-
-    # ==================== BUTTON EVENTS ====================
 
     def open_file(self):
         filepath = filedialog.askopenfilename(
@@ -149,8 +137,6 @@ class CPUViewerApp(ctk.CTk):
         else:
             messagebox.showerror("Eroare", "CPU-ul nu a fost initializat corect.")
 
-    # ==================== UI UPDATE ====================
-
     def _set_val(self, key: str, value_str: str):
         """Write a value into a readonly Entry widget."""
         if key in self.ui_fields:
@@ -163,7 +149,6 @@ class CPUViewerApp(ctk.CTk):
         if not self.cpu:
             return
 
-        # Special registers
         self._set_val("PC",  f"{self.cpu.PC:04X}")
         self._set_val("IR",  f"{self.cpu.IR:04X}")
         self._set_val("SP",  f"{self.cpu.SP:04X}")
@@ -173,7 +158,6 @@ class CPUViewerApp(ctk.CTk):
         self._set_val("IVR", f"{self.cpu.IVR:04X}")
         self._set_val("MAR", str(self.cpu.MAR))   # decimal is clearer for debug
 
-        # Flags
         flags_int = (self.cpu.flags['N'] << 3) | (self.cpu.flags['Z'] << 2) | \
                     (self.cpu.flags['V'] << 1) | self.cpu.flags['C']
         self._set_val("FLAG", f"{flags_int:04b}")   # binary e.g. "0110"
@@ -182,17 +166,14 @@ class CPUViewerApp(ctk.CTk):
         self._set_val("V", str(self.cpu.flags['V']))
         self._set_val("C", str(self.cpu.flags['C']))
 
-        # Buses
         self._set_val("SBUS", f"{self.cpu.SBUS:04X}")
         self._set_val("DBUS", f"{self.cpu.DBUS:04X}")
         self._set_val("RBUS", f"{self.cpu.RBUS:04X}")
 
-        # ALU mirror
         self._set_val("Input S",  f"{self.cpu.SBUS:04X}")
         self._set_val("Input D",  f"{self.cpu.DBUS:04X}")
         self._set_val("Output R", f"{self.cpu.RBUS:04X}")
 
-        # General registers R0-R15
         for i in range(16):
             reg_name = f"R{i}"
             self._set_val(reg_name, f"{self.cpu.registers[reg_name]:04X}")
