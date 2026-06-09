@@ -15,42 +15,53 @@ class MicroprogramLoader:
         excel_table = pd.read_excel(filepath, sheet_name=sheet_name, header=0)
         self.microinstructions = []
 
-
-        coloana_eticheta = 0  # Coloana A din Excel
-        coloana_microadresa = 1  # Coloana B din Excel
-        coloana_SBUS = 4  # Coloana E din Excel
-        coloana_DBUS = 5  # Coloana F din Excel
-        coloana_ALU = 6  # Coloana G din Excel
-        coloana_RBUS = 7  # Coloana H din Excel
-        coloana_memorie = 8  # Coloana I din Excel
-        coloana_alte_operatii = 9  # Coloana J din Excel
-        coloana_succesor = 10  # Coloana K din Excel
-        coloana_adresa_salt = 13  # Coloana N din Excel
-
+        COL_LABEL      = 0
+        COL_ADDR       = 1
+        COL_SBUS       = 4
+        COL_DBUS       = 5
+        COL_ALU        = 6
+        COL_RBUS       = 7
+        COL_MEM        = 8
+        COL_OTHER      = 9
+        COL_SUCCESSOR  = 10
+        COL_INDEX_SEL  = 11
+        COL_INVERSION  = 12
+        COL_JUMP_ADDR  = 13
 
         for index_linie, current_row in excel_table.iterrows():
-            label = str(current_row.iloc[coloana_eticheta]).strip() if not pd.isna(current_row.iloc[coloana_eticheta]) else ""
+            label_raw = current_row.iloc[COL_LABEL]
+            label = str(label_raw).strip() if not pd.isna(label_raw) else ""
 
             try:
-                address_value = current_row.iloc[coloana_microadresa]
+                address_value = current_row.iloc[COL_ADDR]
                 if pd.isna(address_value) or "Microadresa" in str(address_value):
                     continue
-                micro_address_numeric = int(float(address_value))
+                micro_address = int(float(address_value))
             except (ValueError, TypeError):
                 continue
 
-            sbus = str(current_row.iloc[coloana_SBUS]).strip() if not pd.isna(current_row.iloc[coloana_SBUS]) else "NONE"
-            dbus = str(current_row.iloc[coloana_DBUS]).strip() if not pd.isna(current_row.iloc[coloana_DBUS]) else "NONE"
-            alu = str(current_row.iloc[coloana_ALU]).strip() if not pd.isna(current_row.iloc[coloana_ALU]) else "NONE"
-            rbus = str(current_row.iloc[coloana_RBUS]).strip() if not pd.isna(current_row.iloc[coloana_RBUS]) else "NONE"
-            memory_op = str(current_row.iloc[coloana_memorie]).strip() if not pd.isna(current_row.iloc(coloana_memorie)) else "NONE"
-            other_ops = str(current_row.iloc[coloana_alte_operatii]).strip() if not pd.isna(current_row.iloc[coloana_alte_operatii]) else "NONE"
-            successor = str(current_row.iloc[coloana_succesor]).strip() if not pd.isna(current_row.iloc[coloana_succesor]) else "STEP"
-            jump_address = str(current_row.iloc[coloana_adresa_salt]).strip() if not pd.isna(current_row.iloc[coloana_adresa_salt]) else "0"
+            def cell(col):
+                v = current_row.iloc[col]
+                return str(v).strip() if not pd.isna(v) else "NONE"
+
+            sbus      = cell(COL_SBUS)
+            dbus      = cell(COL_DBUS)
+            alu       = cell(COL_ALU)
+            rbus      = cell(COL_RBUS)
+            memory_op = cell(COL_MEM)
+            other_ops = cell(COL_OTHER)
+            successor = cell(COL_SUCCESSOR)
+            index_sel = cell(COL_INDEX_SEL)   # e.g. "INDEX0: 000", "INDEX3: 011"
+            inversion = cell(COL_INVERSION)   # "T: 0" or "F: 1"
+            jump_addr = cell(COL_JUMP_ADDR)   # e.g. "PWFAIL: 0000011" or "B1: 0001010"
+
+            for field in [sbus, dbus, alu, rbus, memory_op, other_ops]:
+                if field in ("nan", "", "NaN"):
+                    field = "NONE"
 
             micro_inst = MicroInstruction(
                 label=label,
-                micro_address=micro_address_numeric,
+                micro_address=micro_address,
                 sbus=sbus,
                 dbus=dbus,
                 alu=alu,
@@ -58,8 +69,11 @@ class MicroprogramLoader:
                 memory_op=memory_op,
                 other_ops=other_ops,
                 successor=successor,
-                jump_address=jump_address
+                index_sel=index_sel,
+                inversion=inversion,
+                jump_address=jump_addr,
             )
             self.microinstructions.append(micro_inst)
 
+        print(f"[MicroprogramLoader] Incarcat {len(self.microinstructions)} microinstructiuni.")
         return self.microinstructions

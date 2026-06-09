@@ -4,53 +4,107 @@ class Assembler:
         self.registers = loader.registers_map
         self.ad_modes = loader.addressing_modes
 
-    def parse_operand(self, operation_string):
-        """Transforma un operand text in valoarea sa binara"""
-        if operation_string.startswith('+') or operation_string.startswith('-') or operation_string.lstrip('-').isdigit():
-            offset = int(operation_string)
-            if offset < 0:
-                offset = (1 << 8) + offset
-            return offset & 0xFF
+    # 00 = imediat
+    # 01 = registru direct
+    # 10 = registru indirect
+    # 11 = indexat
 
+    TWO_OPERAND  = {"MOV", "ADD", "SUB", "CMP", "AND", "OR", "XOR"}
+    ONE_OPERAND  = {"CLR", "NEG", "INC", "DEC", "ASL", "ASR", "LSR",
+                    "ROL", "ROR", "RLC", "RRC", "JMP", "CALL", "PUSH", "POP"}
+    BRANCH       = {"BR", "BEQ", "BNE", "BPL", "BMI", "BCS", "BCC", "BVS", "BVC"}
+    NO_OPERAND   = {"NOP", "HALT", "RET", "RETI", "WAIT", "CLC", "SEC",
+                    "CLZ", "SEZ", "CLV", "SEV", "CLS", "SES", "CCC", "SCC"}
 
-        clean_register_name = operation_string.replace('(', '').replace(')+', '').replace('@', '')
+    class ParsedOperand:
+        def __init__(self, mode, register, extra=None):
+            self.mode = mode
+            self.register = register
+            self.extra = extra  # immediate value or index offset
 
-        current_mode = self.ad_modes["AD"]
-        register_value = 0
+    def _parse_operand(self, token: str) -> "Assembler.ParsedOperand":
+        """
+        Parse a single operand token into (mode, register, extra).
+        """
+        clean_token = token.strip()
 
-        if clean_register_name in self.registers:
-            register_value = self.registers[clean_register_name]
+        if clean_token.upper().startswith('R') and clean_token[1:].isdigit():
+            register = int(clean_token[1:])
+            return self.ParsedOperand(mode=0b01, register=register)
 
-        return (current_mode << 4) | register_value
+        if clean_token.startswith('(R') and clean_token.endswith(')'):
+            register = int(clean_token[2:-1])
+            return self.ParsedOperand(mode=0b10, register=register)
 
-    def assemble(self, parsed_lines):
+        if '(R' in clean_token and clean_token.endswith(')'):
+            paren = clean_token.index('(R')
+            offset_str = clean_token[:paren]
+            reg_str = clean_token[paren+2:-1]
+            offset = int(offset_str, 0) if offset_str else 0
+            register = int(reg_str)
+            return self.ParsedOperand(mode=0b11, register=register, extra=offset)
+
+        if clean_token.upper().endswith('H'):
+            value = int(clean_token[:-1], 16)
+        else:
+            value = int(clean_token, 0)
+        return self.ParsedOperand(mode=0b00, register=0, extra=value)
+
+    def assemble(self, parsed_lines: list) -> list:
+        """
+        Assemble parsed token lines into machine-code words.
+        """
         machine_code_list = []
+        idx = 0
+        flat_tokens = []
 
-        for tokens in parsed_lines:
-            if not tokens: continue
-            mnemonic = tokens[0]
+        for line_tokens in parsed_lines:
+            flat_tokens.extend(line_tokens)
+
+        while idx < len(flat_tokens):
+            mnemonic = flat_tokens[idx].upper()
+            idx += 1
 
             if mnemonic not in self.opcodes:
-                machine_code_list.append("ERROR")
+                print(f"[Assembler] Mnemonic necunoscut: '{mnemonic}'")
+                machine_code_list.append(0)
                 continue
 
-            instruction_info = self.opcodes[mnemonic]
-            base_machine_code = instruction_info['base']
-            avalable_empty_bits = instruction_info['empty_bits']
+            inst_info = self.opcodes[mnemonic]
+            base_opcode = inst_info['base']
 
-            if avalable_empty_bits == 12 and len(tokens) >= 3: #CONTINUA DE ACI
-                src_op = self.parse_operand(tokens[1])  # Primul operand
-                dest_op = self.parse_operand(tokens[2])  # Al doilea operand
-                base_machine_code |= (dest_op << 6) | src_op
+            if mnemonic in self.NO_OPERAND:
+                machine_code_list.append(base_opcode)
 
-            elif avalable_empty_bits == 6 and len(tokens) >= 2:
-                dest_op = self.parse_operand(tokens[1])
-                base_machine_code |= dest_op
+            elif mnemonic in self.TWO_OPERAND:
+                dest = self._parse_operand(flat_tokens[idx]);   idx += 1
+                src  = self._parse_operand(flat_tokens[idx]);   idx += 1
 
-            elif avalable_empty_bits == 8 and len(tokens) >= 2:
-                offset = self.parse_operand(tokens[1])
-                base_machine_code |= offset
+                word = base_opcode | (src.mode << 10) | (src.register << 6) | \
+                       (dest.mode << 4)   | dest.register
+                machine_code_list.append(word & 0xFFFF)
 
-            machine_code_list.append(base_machine_code)
+                if src.extra is not None:
+                    machine_code_list.append(src.extra & 0xFFFF)
+                if dest.extra is not None:
+                    machine_code_list.append(dest.extra & 0xFFFF)
+
+            elif mnemonic in self.ONE_OPERAND:
+                dest = self._parse_operand(flat_tokens[idx]);   idx += 1
+
+                word = base_opcode | (dest.mode << 4) | dest.register
+                machine_code_list.append(word & 0xFFFF)
+
+                if dest.extra is not None:
+                    machine_code_list.append(dest.extra & 0xFFFF)
+
+            elif mnemonic in self.BRANCH:
+                offset_str = flat_tokens[idx];   idx += 1
+                offset = int(offset_str, 0)
+                if offset < 0:
+                    offset = (1 << 8) + offset
+                offset8bit = offset & 0xFF
+                word = base_opcode | offset8bit
+                machine_code_list.append(word & 0xFFFF)
 
         return machine_code_list
